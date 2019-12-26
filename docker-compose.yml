@@ -1,0 +1,17 @@
+version: '3'
+services:
+  php-apache:
+    build:
+      context: ./docker/php-apache
+      dockerfile: Dockerfile-php7
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - redis
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
