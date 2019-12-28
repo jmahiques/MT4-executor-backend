@@ -14,6 +14,9 @@ RUN pecl install xdebug-2.7.2
 RUN docker-php-ext-enable xdebug
 COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
+RUN pecl install redis
+RUN docker-php-ext-enable redis
+
 RUN a2enmod rewrite
 
 #create DocumentRoot to avoid apache crashing before volumes are mounted
