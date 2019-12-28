@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true" bootstrap="vendor/autoload.php">
+    <testsuites>
+        <testsuite name="Unit tests">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src/</directory>
+        </whitelist>
+    </filter>
+
+    <php>
+        <const name="STRATEGY_STOP_LOSS" value="20"/>
+        <const name="STRATEGY_PARTIAL_STOP_LOSS" value="16"/>
+        <const name="STRATEGY_PROFIT" value="120"/>
+        <const name="STRATEGY_PARTIAL_PROFIT" value="60"/>
+        <const name="STRATEGY_LOTS" value="0.02"/>
+        <const name="STRATEGY_DIGITS_OFFSET" value="1"/>
+    </php>
+</phpunit>

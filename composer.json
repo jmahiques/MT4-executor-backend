@@ -15,5 +15,8 @@
         "phpunit/phpunit": "^8.5",
         "nyholm/psr7-server": "^0.4.1",
         "zendframework/zend-httphandlerrunner": "^1.1"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
     }
 }
