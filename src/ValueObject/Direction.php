@@ -11,15 +11,6 @@ final class Direction
 
     private function __construct(string $value)
     {
-        $acceptedValues = (new \ReflectionClass(__CLASS__))->getConstants();
-        if (!in_array($value, $acceptedValues)) {
-            throw new \Exception(sprintf(
-                'Invalid value %s, accepted values: %s',
-                $value,
-                implode($acceptedValues)
-            ));
-        }
-
         $this->value = $value;
     }
 
