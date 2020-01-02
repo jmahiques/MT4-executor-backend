@@ -9,7 +9,7 @@ final class Price
     public function __construct(float $value)
     {
         if ($value <= 0) {
-            throw new \Exception(sprintf('Incorrect value %s should be greater than 0.', $value));
+            throw new \Exception(sprintf('Incorrect value %s, should be greater than 0', $value));
         }
 
         $this->value = $value;

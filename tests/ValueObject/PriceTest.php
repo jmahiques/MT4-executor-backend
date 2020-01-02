@@ -12,7 +12,7 @@ final class PriceTest extends TestCase
 
     public function testError()
     {
-        self::expectException(\Exception::class);
+        self::expectExceptionMessage('Incorrect value 0, should be greater than 0');
         new Price(0);
     }
 }
