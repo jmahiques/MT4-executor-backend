@@ -2,6 +2,13 @@
 
 namespace App\Entity;
 
+use App\BusinessRule\BusinessRule;
+use App\BusinessRule\GreaterThanRule;
+use App\BusinessRule\LessThanRule;
+use App\ValueObject\Direction;
+use App\ValueObject\Level;
+use App\ValueObject\Price;
+
 final class Position
 {
     const TYPE_BUY = 'buy';
@@ -13,99 +20,203 @@ final class Position
     const STATE_BREAKEVEN = 'breakeven';
     const STATE_CLOSED = 'closed';
 
-    public $openTime;
-    public $openPrice;
-    public $stop;
-    public $profit;
-    public $partialProfit;
-    public $partialStop;
-    public $partialStopBreakEven;
-    public $stopBreakEven;
-    public $openLots;
-    public $lots;
-    public $instrument;
-    public $ticket;
-    public $digits;
-    public $type;
-    public $closedTime;
-    public $closedHalfTime;
-    public $currentState;
+    /** @var \DateTime */
+    private $openTime;
+    /** @var float */
+    private $openPrice;
+    /** @var Level */
+    private $stop;
+    /** @var Level */
+    private $partialStop;
+    /** @var Level */
+    private $profit;
+    /** @var Level */
+    private $partialProfit;
+    /** @var float */
+    private $openLots;
+    /** @var float */
+    private $lots;
+    /** @var string */
+    private $instrument;
+    /** @var int */
+    private $ticket;
+    /** @var int */
+    private $digits;
+    /** @var string */
+    private $type;
+    /** @var \DateTime */
+    private $closedTime;
+    /** @var \DateTime */
+    private $closedHalfTime;
+    /** @var string */
+    private $currentState;
+    /** @var int */
+    private $magicNumber;
+
+    private function __construct(
+        string $type,
+        int $magicNumber,
+        int $ticket,
+        \DateTime $openTime,
+        float $openPrice,
+        float $lots,
+        float $digits,
+        string $instrument,
+        Level $stop,
+        Level $partialStop,
+        Level $profit,
+        Level $partialProfit,
+        array $rules
+    ) {
+        $this->type = $type;
+        $this->setOpenTime($openTime);
+        $this->currentState = self::STATE_OPEN;
+        $this->openPrice = $openPrice;
+        $this->setValueGreaterThan0('lots', $lots);
+        $this->openLots = $lots;
+        $this->setValueGreaterThan0('digits', $digits);
+        $this->instrument = $instrument;
+        $this->setValueGreaterThan0('ticket', $ticket);
+        $this->magicNumber = $magicNumber;
+        $this->stop = $stop;
+        $this->partialStop = $partialStop;
+        $this->profit = $profit;
+        $this->partialProfit = $partialProfit;
+
+        $this->validatePriceLevels($rules);
+    }
 
     public static function BUY (
-        ?\DateTime $openTime = null,
-        ?float $openPrice = null,
-        ?float $lots = null,
-        ?float $openLots = null,
-        ?float $digits = null,
-        ?string $instrument = null,
-        ?float $ticket = null,
-        ?float $stop = null,
-        ?float $partialStop = null,
-        ?float $profit = null,
-        ?float $partialProfit = null,
-        ?bool $partialStopBreakEven = false,
-        ?bool $stopBreakEven = false,
-        ?\DateTime $closedTime = null,
-        ?\DateTime $closedHalfTime = null,
-        ?string $currentState = self::STATE_OPEN
+        int $magicNumber,
+        int $ticket,
+        \DateTime $openTime,
+        float $openPrice,
+        float $lots,
+        float $digits,
+        string $instrument,
+        Level $stop,
+        Level $partialStop,
+        Level $profit,
+        Level $partialProfit
     ) {
-        $self = new self();
-        $self->type = self::TYPE_BUY;
-        $self->openTime = $openTime;
-        $self->openPrice = $openPrice;
-        $self->stop = $stop;
-        $self->profit = $profit;
-        $self->partialProfit = $partialProfit;
-        $self->partialStop = $partialStop;
-        $self->partialStopBreakEven = $partialStopBreakEven;
-        $self->stopBreakEven = $stopBreakEven;
-        $self->openLots = $openLots;
-        $self->lots = $lots;
-        $self->instrument = $instrument;
-        $self->ticket = $ticket;
-        $self->digits = $digits;
-        $self->closedTime = $closedTime;
-        $self->closedHalfTime = $closedHalfTime;
-        $self->currentState = $currentState;
-        return $self;
+        $openPriceLevel = self::getOpenPriceLevel($openPrice, Direction::GREATER());
+
+        return new Position(
+            self::TYPE_BUY,
+            $magicNumber,
+            $ticket,
+            $openTime,
+            $openPrice,
+            $lots,
+            $digits,
+            $instrument,
+            $stop,
+            $partialStop,
+            $profit,
+            $partialProfit,
+            [
+                // stop < partial_stop < open_price < partial_profit < profit
+                new LessThanRule($stop, $partialStop, new \Exception('The stop must be less than the partial stop')),
+                new LessThanRule($partialStop, $openPriceLevel, new \Exception('The partial stop must be less than the open price')),
+                new LessThanRule($openPriceLevel, $partialProfit, new \Exception('The open price must be less than the partial profit')),
+                new LessThanRule($partialProfit, $profit, new \Exception('The partial profit must be less than the profit')),
+            ]
+        );
     }
 
     public static function SELL(
-        ?\DateTime $openTime = null,
-        ?float $openPrice = null,
-        ?float $lots = null,
-        ?float $openLots = null,
-        ?float $digits = null,
-        ?string $instrument = null,
-        ?float $ticket = null,
-        ?float $stop = null,
-        ?float $partialStop = null,
-        ?float $profit = null,
-        ?float $partialProfit = null,
-        ?bool $partialStopBreakEven = false,
-        ?bool $stopBreakEven = false,
-        ?\DateTime $closedTime = null,
-        ?\DateTime $closedHalfTime = null,
-        ?string $currentState = self::STATE_OPEN
+        int $magicNumber,
+        int $ticket,
+        \DateTime $openTime,
+        float $openPrice,
+        float $lots,
+        float $digits,
+        string $instrument,
+        Level $stop,
+        Level $partialStop,
+        Level $profit,
+        Level $partialProfit
     ){
-        $self = new self();
-        $self->type = self::TYPE_SELL;
-        $self->openTime = $openTime;
-        $self->openPrice = $openPrice;
-        $self->stop = $stop;
-        $self->profit = $profit;
-        $self->partialProfit = $partialProfit;
-        $self->partialStop = $partialStop;
-        $self->partialStopBreakEven = $partialStopBreakEven;
-        $self->stopBreakEven = $stopBreakEven;
-        $self->openLots = $openLots;
-        $self->lots = $lots;
-        $self->instrument = $instrument;
-        $self->ticket = $ticket;
-        $self->digits = $digits;
-        $self->closedTime = $closedTime;
-        $self->closedHalfTime = $closedHalfTime;
-        $self->currentState = $currentState;
-        return $self;
+        $openPriceLevel = self::getOpenPriceLevel($openPrice, Direction::LESS());
+
+        return new Position(
+            self::TYPE_SELL,
+            $magicNumber,
+            $ticket,
+            $openTime,
+            $openPrice,
+            $lots,
+            $digits,
+            $instrument,
+            $stop,
+            $partialStop,
+            $profit,
+            $partialProfit,
+            [
+                //stop > partial_stop > open_price > partial_profit > profit
+                new GreaterThanRule($stop, $partialStop, new \Exception('The stop must be greater than the partial stop')),
+                new GreaterThanRule($partialStop, $openPriceLevel, new \Exception('The partial stop must be greater than the open price')),
+                new GreaterThanRule($openPriceLevel, $partialProfit, new \Exception('The open price must be greater than the partial profit')),
+                new GreaterThanRule($partialProfit, $profit, new \Exception('The partial profit must be greater than the profit')),
+            ]
+        );
+    }
+
+    private function setValueGreaterThan0($property, $value)
+    {
+        if ($value <= 0.00) {
+            throw new \Exception(sprintf('%s should be greater than 0', $property));
+        }
+
+        $this->{$property} = $value;
+    }
+
+    private function setOpenTime(\DateTime $openTime)
+    {
+        if ($openTime > new \DateTime('now')) {
+            throw new \Exception('The open time cannot me higher than now');
+        }
+
+        $this->openTime = $openTime;
+    }
+
+    /**
+     * @param BusinessRule[] $rules
+     * @throws \Exception
+     */
+    private function validatePriceLevels(array $rules)
+    {
+        foreach ($rules as $rule) {
+            $rule->validate();
+        }
+    }
+
+    private static function getOpenPriceLevel(float $openPrice, Direction $direction)
+    {
+        if ($openPrice <= 0) {
+            throw new \Exception('The open price should be greater than 0');
+        }
+
+        return new Level(new Price($openPrice), $direction);
+    }
+
+    public function reachedPartialStop(float $price)
+    {
+        return $this->partialStop->hasReachedPrice() ?: $this->partialStop->reached($price);
+    }
+
+    public function reachedStop(float $price)
+    {
+        return $this->stop->hasReachedPrice() ?: $this->stop->reached($price);
+    }
+
+    public function reachedPartialProfit(float $price)
+    {
+        return $this->partialProfit->hasReachedPrice() ?: $this->partialProfit->reached($price);
+    }
+
+    public function reachedProfit(float $price)
+    {
+        return $this->profit->hasReachedPrice() ?: $this->profit->reached($price);
     }
 }
