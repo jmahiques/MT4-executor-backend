@@ -2,16 +2,15 @@
 
 namespace App\ValueObject;
 
+use Webmozart\Assert\Assert;
+
 final class Price
 {
     private $value;
 
     public function __construct(float $value)
     {
-        if ($value <= 0) {
-            throw new \Exception(sprintf('Incorrect value %s, should be greater than 0', $value));
-        }
-
+        Assert::greaterThan($value, 0.00, sprintf('Incorrect value %s, should be greater than 0', $value));
         $this->value = $value;
     }
 

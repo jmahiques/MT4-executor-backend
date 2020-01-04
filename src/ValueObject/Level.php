@@ -2,6 +2,8 @@
 
 namespace App\ValueObject;
 
+use Webmozart\Assert\Assert;
+
 final class Level
 {
     private $price;
@@ -24,9 +26,7 @@ final class Level
 
     public function reached(float $price): bool
     {
-        if ($this->reached) {
-            throw new \Exception('The price was reached the level previously');
-        }
+        Assert::notEq($this->reached, true, 'The price was reached the level previously');
 
         if ($this->direction->get() === Direction::LESS && $this->price->get() <= $price) {
             $this->priceReachedLevelPrice();

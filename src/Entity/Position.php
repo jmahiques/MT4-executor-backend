@@ -8,6 +8,7 @@ use App\BusinessRule\LessThanRule;
 use App\ValueObject\Direction;
 use App\ValueObject\Level;
 use App\ValueObject\Price;
+use Webmozart\Assert\Assert;
 
 final class Position
 {
@@ -68,15 +69,19 @@ final class Position
         Level $partialProfit,
         array $rules
     ) {
+        Assert::greaterThan($lots, 0, 'Lots should be greater than 0');
+        Assert::greaterThan($digits, 0, 'Digits should be greater than 0');
+        Assert::greaterThan($ticket, 0, 'Ticket should be greater than 0');
+
         $this->type = $type;
         $this->setOpenTime($openTime);
         $this->currentState = self::STATE_OPEN;
         $this->openPrice = $openPrice;
-        $this->setValueGreaterThan0('lots', $lots);
+        $this->lots = $lots;
         $this->openLots = $lots;
-        $this->setValueGreaterThan0('digits', $digits);
+        $this->digits = $digits;
         $this->instrument = $instrument;
-        $this->setValueGreaterThan0('ticket', $ticket);
+        $this->ticket = $ticket;
         $this->magicNumber = $magicNumber;
         $this->stop = $stop;
         $this->partialStop = $partialStop;
@@ -162,15 +167,6 @@ final class Position
         );
     }
 
-    private function setValueGreaterThan0($property, $value)
-    {
-        if ($value <= 0.00) {
-            throw new \Exception(sprintf('%s should be greater than 0', $property));
-        }
-
-        $this->{$property} = $value;
-    }
-
     private function setOpenTime(\DateTime $openTime)
     {
         if ($openTime > new \DateTime('now')) {
@@ -193,10 +189,7 @@ final class Position
 
     private static function getOpenPriceLevel(float $openPrice, Direction $direction)
     {
-        if ($openPrice <= 0) {
-            throw new \Exception('The open price should be greater than 0');
-        }
-
+        Assert::greaterThan($openPrice, 0, 'The open price should be greater than 0');
         return new Level(new Price($openPrice), $direction);
     }
 
@@ -218,5 +211,15 @@ final class Position
     public function reachedProfit(float $price)
     {
         return $this->profit->hasReachedPrice() ?: $this->profit->reached($price);
+    }
+
+    public function magicNumber()
+    {
+        return $this->magicNumber;
+    }
+
+    public function ticket()
+    {
+        return $this->ticket;
     }
 }

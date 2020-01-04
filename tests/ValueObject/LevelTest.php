@@ -20,7 +20,7 @@ final class LevelTest extends TestCase
         self::assertTrue($level->hasReachedPrice());
         self::assertInstanceOf(\DateTime::class, $level->when());
 
-        self::expectException(\Exception::class);
+        self::expectExceptionMessage('The price was reached the level previously');
         $level->reached(1.10);
     }
 }

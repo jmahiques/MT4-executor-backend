@@ -58,19 +58,19 @@ class PositionTest extends TestCase
 
     public function testInvalidLots()
     {
-        self::expectExceptionMessage('lots should be greater than 0');
+        self::expectExceptionMessage('Lots should be greater than 0');
         $this->buyPositionFactory('lots', 0);
     }
 
     public function testInvalidDigits()
     {
-        self::expectExceptionMessage('digits should be greater than 0');
+        self::expectExceptionMessage('Digits should be greater than 0');
         $this->buyPositionFactory('digits', 0);
     }
 
     public function testInvalidTicket()
     {
-        self::expectExceptionMessage('ticket should be greater than 0');
+        self::expectExceptionMessage('Ticket should be greater than 0');
         $this->buyPositionFactory('ticket', 0);
     }
 
