@@ -3,6 +3,7 @@
 namespace App\Router;
 
 use App\EndPoint\EndPoint;
+use App\EndPoint\NoEndPoint;
 use App\EndPoint\OpenPositionEndPoint;
 
 class Router
@@ -14,12 +15,12 @@ class Router
         $this->root = $root;
     }
 
-    public function match(string $url): ?EndPoint
+    public function match(string $url): EndPoint
     {
         if ($url === $this->root.'/open') {
             return new OpenPositionEndPoint();
         }
 
-        return null;
+        return new NoEndPoint();
     }
 }
