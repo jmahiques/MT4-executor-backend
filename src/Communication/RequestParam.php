@@ -2,7 +2,7 @@
 
 namespace App\Communication;
 
-final class RequestParams
+final class RequestParam
 {
     public const INSTRUMENT = 'I';
     public const ASK = 'A';
@@ -19,4 +19,13 @@ final class RequestParams
     public const PARTIAL_STOP = 'PS';
     public const PROFIT = 'P';
     public const PARTIAL_PROFIT = 'PP';
+
+    public static function getNameForConstant(string $constant)
+    {
+        foreach ((new \ReflectionClass(__CLASS__))->getConstants() as $key => $value) {
+            if ($constant == $value) {
+                return $key;
+            }
+        }
+    }
 }
