@@ -288,4 +288,15 @@ final class Position
             return strpos($key, 'TYPE_') !== false;
         }, ARRAY_FILTER_USE_BOTH);
     }
+
+    /** @todo normalize price with digits */
+    public function notifyLevels(): string
+    {
+        return implode(';', [
+            number_format($this->stop->atPrice(), $this->digits-1),
+            number_format($this->partialStop->atPrice(), $this->digits-1),
+            number_format($this->profit->atPrice(), $this->digits-1),
+            number_format($this->partialProfit->atPrice(), $this->digits-1),
+        ]);
+    }
 }

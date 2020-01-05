@@ -2,9 +2,15 @@
 
 namespace App\EndPoint;
 
-use App\Communication\RequestParams;
-use App\DTO\OpenPosition;
-use App\PipelineStage\DtoValueMapper;
+use App\Communication\RequestParam;
+use App\Command\OpenPositionCommand;
+use App\Entity\Position;
+use App\PipelineStage\CreateOpenPositionCommandStage;
+use App\PipelineStage\ValidateAndParseDatetimeStage;
+use App\PipelineStage\ValidateAndParseFloatStage;
+use App\PipelineStage\ValidateAndParseIntegerStage;
+use App\PipelineStage\ValidateAndParseStringStage;
+use App\Strategy\DefaultStrategy;
 use League\Pipeline\StageInterface;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -16,23 +22,45 @@ final class OpenPositionEndPoint extends EndPoint
     protected function getStages(): array
     {
         return [
-            new DtoValueMapper(RequestParams::MAGIC_NUMBER, 'magicNumber', 'The magic number must be sent'),
-            new DtoValueMapper(RequestParams::TICKET, 'ticket', 'The ticket must be sent'),
-            new DtoValueMapper(RequestParams::OPEN_PRICE, 'openPrice', 'The ticket must be sent'),
-            new DtoValueMapper(RequestParams::OPEN_TIME, 'openTime', 'The ticket must be sent'),
-            new DtoValueMapper(RequestParams::INSTRUMENT, 'instrument', 'The ticket must be sent'),
-            new DtoValueMapper(RequestParams::DIGITS, 'digits', 'The ticket must be sent'),
-            new DtoValueMapper(RequestParams::LOTS, 'lots', 'The ticket must be sent'),
+            new ValidateAndParseIntegerStage(RequestParam::TICKET),
+            new ValidateAndParseIntegerStage(RequestParam::MAGIC_NUMBER),
+            new ValidateAndParseFloatStage(RequestParam::OPEN_PRICE),
+            new ValidateAndParseDatetimeStage(RequestParam::OPEN_TIME),
+            new ValidateAndParseStringStage(RequestParam::INSTRUMENT),
+            new ValidateAndParseIntegerStage(RequestParam::DIGITS),
+            new ValidateAndParseFloatStage(RequestParam::LOTS),
+            new ValidateAndParseStringStage(RequestParam::ORDER_TYPE),
+            new ValidateAndParseIntegerStage(RequestParam::STOP),
+            new ValidateAndParseIntegerStage(RequestParam::PARTIAL_STOP),
+            new ValidateAndParseIntegerStage(RequestParam::PROFIT),
+            new ValidateAndParseIntegerStage(RequestParam::PARTIAL_PROFIT),
+            new CreateOpenPositionCommandStage()
         ];
     }
 
-    protected function createDto()
+    /**
+     * @param ServerRequestInterface $request
+     * @param OpenPositionCommand $command
+     * @return ResponseInterface
+     */
+    protected function handle(ServerRequestInterface $request, $command): ResponseInterface
     {
-        return new OpenPosition();
-    }
+        try {
+            $strategy = DefaultStrategy::fromCommand($command);
+            $position = Position::fromCommand(
+                $command,
+                $strategy->computeStopLevel($command),
+                $strategy->computePartialStopLevel($command),
+                $strategy->computeProfitLevel($command),
+                $strategy->computePartialProfitLevel($command)
+            );
+            /** @todo LOG entity creation */
+            $this->repository->save($position);
 
-    protected function handle(ServerRequestInterface $request, $dto): ResponseInterface
-    {
-        return new Response(200, ['Content-Type' => 'text/plain'], 'OPEN');
+            return new Response(200, ['Content-Type' => 'text/plain'], $position->notifyLevels());
+        } catch (\Exception $e) {
+            /** @todo log error */
+            return new Response(406, ['Content-Type' => 'text/plain'], $e->getMessage());
+        }
     }
 }
