@@ -1,24 +1,13 @@
 <?php
 
-use App\EndPoint\MarketTick;
-use App\EndPoint\OpenPosition;
-use App\EndPoint\Probe;
-use App\Utils\RedisPopulateEnv;
+use App\EndPoint\EndPoint;
+use App\Router\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use RingCentral\Psr7\Response;
-use Symfony\Component\Dotenv\Dotenv;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 
 require_once __DIR__ . '/vendor/autoload.php';
-$envFilepath = __DIR__.'/.env.local';
-
-if (!@file_exists($envFilepath)) {
-    throw new \Exception(sprintf('%s file not found', $envFilepath));
-}
-
-(new Dotenv(false))->load($envFilepath);
-RedisPopulateEnv::populate($_ENV);
 
 $psr17Factory = new Psr17Factory();
 $creator = new ServerRequestCreator(
