@@ -1,7 +1,6 @@
 <?php
 
 use App\Communication\RequestParam;
-use App\DTO\OpenPositionCommand;
 use App\PipelineStage\ValidateAndParseFloatStage;
 use PHPUnit\Framework\TestCase;
 

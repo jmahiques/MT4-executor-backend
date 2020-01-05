@@ -1,8 +1,6 @@
 <?php
 
 use App\Communication\RequestParam;
-use App\DTO\OpenPositionCommand;
-use App\DTO\PipelineInfo;
 use App\PipelineStage\ValidateAndParseDatetimeStage;
 use PHPUnit\Framework\TestCase;
 

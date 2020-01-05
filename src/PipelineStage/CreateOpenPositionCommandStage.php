@@ -3,7 +3,7 @@
 namespace App\PipelineStage;
 
 use App\Communication\RequestParam;
-use App\DTO\OpenPositionCommand;
+use App\Command\OpenPositionCommand;
 use League\Pipeline\StageInterface;
 
 class CreateOpenPositionCommandStage implements StageInterface
