@@ -27,5 +27,7 @@ final class RequestParam
                 return $key;
             }
         }
+
+        throw new \Exception(sprintf('Constant not found for value %s', $constant));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\EndPoint;
 
-use App\DTO\PipelineInfo;
 use App\Persistence\PositionRepository;
 use League\Pipeline\Pipeline;
 use League\Pipeline\PipelineBuilder;
