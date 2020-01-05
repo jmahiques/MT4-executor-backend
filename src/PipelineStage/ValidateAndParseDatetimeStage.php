@@ -2,9 +2,10 @@
 
 namespace App\PipelineStage;
 
+use App\Communication\RequestParam;
 use Webmozart\Assert\Assert;
 
-final class MapDatetimeStage extends MapValueStage
+final class ValidateAndParseDatetimeStage extends ValidateAndParseValueStage
 {
     private function createDatetime(string $value): ?\DateTime
     {
@@ -18,7 +19,7 @@ final class MapDatetimeStage extends MapValueStage
         Assert::isInstanceOf(
             $this->createDatetime($value),
             \DateTime::class,
-            sprintf('The key %s must be a datetime object', $this->property)
+            sprintf('The key %s must be a datetime object', RequestParam::getNameForConstant($this->key))
         );
     }
 

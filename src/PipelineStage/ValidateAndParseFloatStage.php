@@ -2,15 +2,16 @@
 
 namespace App\PipelineStage;
 
+use App\Communication\RequestParam;
 use Webmozart\Assert\Assert;
 
-final class MapFloatStage extends MapValueStage
+final class ValidateAndParseFloatStage extends ValidateAndParseValueStage
 {
     protected function assertValue($value)
     {
         Assert::float(
             filter_var($value, FILTER_VALIDATE_FLOAT),
-            sprintf('The key %s must be a float', $this->property)
+            sprintf('The key %s must be a float', RequestParam::getNameForConstant($this->key))
         );
     }
 
