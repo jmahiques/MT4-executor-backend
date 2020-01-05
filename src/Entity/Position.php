@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\BusinessRule\BusinessRule;
 use App\BusinessRule\GreaterThanRule;
 use App\BusinessRule\LessThanRule;
+use App\Command\OpenPositionCommand;
 use App\ValueObject\Direction;
 use App\ValueObject\Level;
 use App\ValueObject\Price;
@@ -66,27 +67,26 @@ final class Position
         Level $stop,
         Level $partialStop,
         Level $profit,
-        Level $partialProfit,
-        array $rules
+        Level $partialProfit
     ) {
-        Assert::greaterThan($lots, 0, 'Lots should be greater than 0');
-        Assert::greaterThan($digits, 0, 'Digits should be greater than 0');
-        Assert::greaterThan($ticket, 0, 'Ticket should be greater than 0');
-
-        $this->type = $type;
+        $this->setType($type);
         $this->setOpenTime($openTime);
         $this->currentState = self::STATE_OPEN;
-        $this->openPrice = $openPrice;
-        $this->lots = $lots;
+        $this->setOpenPrice($openPrice);
+        $this->setLots($lots);
         $this->openLots = $lots;
-        $this->digits = $digits;
+        $this->setDigits($digits);
         $this->instrument = $instrument;
-        $this->ticket = $ticket;
+        $this->setTicket($ticket);
         $this->magicNumber = $magicNumber;
         $this->stop = $stop;
         $this->partialStop = $partialStop;
         $this->profit = $profit;
         $this->partialProfit = $partialProfit;
+
+        $rules = $this->type === self::TYPE_BUY
+            ? $this->getBuyRules()
+            : $this->getSellRules();
 
         $this->validatePriceLevels($rules);
     }
@@ -104,8 +104,6 @@ final class Position
         Level $profit,
         Level $partialProfit
     ) {
-        $openPriceLevel = self::getOpenPriceLevel($openPrice, Direction::GREATER());
-
         return new Position(
             self::TYPE_BUY,
             $magicNumber,
@@ -118,14 +116,7 @@ final class Position
             $stop,
             $partialStop,
             $profit,
-            $partialProfit,
-            [
-                // stop < partial_stop < open_price < partial_profit < profit
-                new LessThanRule($stop, $partialStop, new \Exception('The stop must be less than the partial stop')),
-                new LessThanRule($partialStop, $openPriceLevel, new \Exception('The partial stop must be less than the open price')),
-                new LessThanRule($openPriceLevel, $partialProfit, new \Exception('The open price must be less than the partial profit')),
-                new LessThanRule($partialProfit, $profit, new \Exception('The partial profit must be less than the profit')),
-            ]
+            $partialProfit
         );
     }
 
@@ -142,8 +133,6 @@ final class Position
         Level $profit,
         Level $partialProfit
     ){
-        $openPriceLevel = self::getOpenPriceLevel($openPrice, Direction::LESS());
-
         return new Position(
             self::TYPE_SELL,
             $magicNumber,
@@ -156,14 +145,25 @@ final class Position
             $stop,
             $partialStop,
             $profit,
-            $partialProfit,
-            [
-                //stop > partial_stop > open_price > partial_profit > profit
-                new GreaterThanRule($stop, $partialStop, new \Exception('The stop must be greater than the partial stop')),
-                new GreaterThanRule($partialStop, $openPriceLevel, new \Exception('The partial stop must be greater than the open price')),
-                new GreaterThanRule($openPriceLevel, $partialProfit, new \Exception('The open price must be greater than the partial profit')),
-                new GreaterThanRule($partialProfit, $profit, new \Exception('The partial profit must be greater than the profit')),
-            ]
+            $partialProfit
+        );
+    }
+
+    public static function fromCommand(OpenPositionCommand $command, Level $stop, Level $partialStop, Level $profit, Level $partialProfit)
+    {
+        return new self(
+            $command->getType(),
+            $command->getMagicNumber(),
+            $command->getTicket(),
+            $command->getOpenTime(),
+            $command->getOpenPrice(),
+            $command->getLots(),
+            $command->getDigits(),
+            $command->getInstrument(),
+            $stop,
+            $partialStop,
+            $profit,
+            $partialProfit
         );
     }
 
@@ -176,6 +176,71 @@ final class Position
         $this->openTime = $openTime;
     }
 
+    private function setType(string $type)
+    {
+        self::assertPositionType($type);
+        $this->type = $type;
+    }
+
+    private function setLots(float $lots)
+    {
+        Assert::greaterThan($lots, 0, 'Lots should be greater than 0');
+        $this->lots = $lots;
+    }
+
+    private function setTicket(int $ticket)
+    {
+        Assert::greaterThan($ticket, 0, 'Ticket should be greater than 0');
+        $this->ticket = $ticket;
+    }
+
+    private function setDigits(int $digits)
+    {
+        Assert::greaterThan($digits, 0, 'Digits should be greater than 0');
+        $this->digits = $digits;
+    }
+
+    public function setOpenPrice(float $openPrice)
+    {
+        Assert::greaterThan($openPrice, 0, 'Open price should be greater than 0');
+        $this->openPrice = $openPrice;
+    }
+
+    public static function assertPositionType(string $type)
+    {
+        $validValues = self::getPositionTypes();
+        Assert::true(
+            in_array($type, $validValues),
+            sprintf('Position type must be one of: %s', implode(',', $validValues))
+        );
+    }
+
+    private function getBuyRules()
+    {
+        $openPriceLevel = new Level(new Price($this->openPrice), Direction::GREATER());
+
+        return [
+            // stop < partial_stop < open_price < partial_profit < profit
+            new LessThanRule($this->stop, $this->partialStop, new \Exception('The stop must be less than the partial stop')),
+            new LessThanRule($this->partialStop, $openPriceLevel, new \Exception('The partial stop must be less than the open price')),
+            new LessThanRule($openPriceLevel, $this->partialProfit, new \Exception('The open price must be less than the partial profit')),
+            new LessThanRule($this->partialProfit, $this->profit, new \Exception('The partial profit must be less than the profit')),
+        ];
+    }
+
+    private function getSellRules()
+    {
+        $openPriceLevel = new Level(new Price($this->openPrice), Direction::LESS());
+
+        return [
+            //stop > partial_stop > open_price > partial_profit > profit
+            new GreaterThanRule($this->stop, $this->partialStop, new \Exception('The stop must be greater than the partial stop')),
+            new GreaterThanRule($this->partialStop, $openPriceLevel, new \Exception('The partial stop must be greater than the open price')),
+            new GreaterThanRule($openPriceLevel, $this->partialProfit, new \Exception('The open price must be greater than the partial profit')),
+            new GreaterThanRule($this->partialProfit, $this->profit, new \Exception('The partial profit must be greater than the profit')),
+        ];
+    }
+
     /**
      * @param BusinessRule[] $rules
      * @throws \Exception
@@ -185,12 +250,6 @@ final class Position
         foreach ($rules as $rule) {
             $rule->validate();
         }
-    }
-
-    private static function getOpenPriceLevel(float $openPrice, Direction $direction)
-    {
-        Assert::greaterThan($openPrice, 0, 'The open price should be greater than 0');
-        return new Level(new Price($openPrice), $direction);
     }
 
     public function reachedPartialStop(float $price)
@@ -221,5 +280,12 @@ final class Position
     public function ticket()
     {
         return $this->ticket;
+    }
+
+    public static function getPositionTypes()
+    {
+        return array_filter((new \ReflectionClass(__CLASS__))->getConstants(), function ($value, $key) {
+            return strpos($key, 'TYPE_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
+use App\Command\OpenPositionCommand;
 use App\Entity\Position;
+use App\Strategy\DefaultStrategy;
 use App\ValueObject\Direction;
 use App\ValueObject\Level;
 use App\ValueObject\Price;
@@ -52,7 +54,7 @@ class PositionTest extends TestCase
 
     public function testInvalidOpenPrice()
     {
-        self::expectExceptionMessage('The open price should be greater than 0');
+        self::expectExceptionMessage('Open price should be greater than 0');
         $this->buyPositionFactory('openPrice', 0);
     }
 
@@ -235,5 +237,53 @@ class PositionTest extends TestCase
             new Level(new Price(1.1230), Direction::LESS()),
             new Level(new Price(1.1220), Direction::LESS())
         );
+    }
+
+    public function testValidationTypeThrowsException()
+    {
+        self::expectExceptionMessage('Position type must be one of: ' . implode(',', Position::getPositionTypes()));
+        Position::assertPositionType('type');
+    }
+
+    public function testValidPositionTypeNotThrowException()
+    {
+        Position::assertPositionType(Position::TYPE_SELL);
+        self::assertTrue(true);
+    }
+
+    public function testReturnPositionTypes()
+    {
+        self::assertEquals(
+            ['TYPE_BUY' => Position::TYPE_BUY, 'TYPE_SELL' => Position::TYPE_SELL],
+            Position::getPositionTypes()
+        );
+    }
+
+    public function testCreateFromCommand()
+    {
+        $command = new OpenPositionCommand(
+            1,
+            1,
+            1.12,
+            new \DateTime('now'),
+            'EURUSD',
+            5,
+            0.02,
+            Position::TYPE_BUY,
+            20,
+            16,
+            120,
+            60
+        );
+        $strategy = DefaultStrategy::fromCommand($command);
+
+        $position = Position::fromCommand(
+            $command,
+            $strategy->computeStopLevel($command),
+            $strategy->computePartialStopLevel($command),
+            $strategy->computeProfitLevel($command),
+            $strategy->computePartialProfitLevel($command)
+        );
+        self::assertInstanceOf(Position::class, $position);
     }
 }
