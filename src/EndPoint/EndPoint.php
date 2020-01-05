@@ -24,7 +24,7 @@ abstract class EndPoint
     public function execute(ServerRequestInterface $request): ResponseInterface
     {
         $pipeline = $this->createPipeLine();
-        $result = $pipeline->process(new PipelineInfo($request->getParsedBody(), $this->createDto()));
+        $result = $pipeline->process($request->getParsedBody());
 
         return $this->handle($request, $result);
     }
@@ -43,7 +43,5 @@ abstract class EndPoint
     /** @return StageInterface[] */
     protected abstract function getStages(): array;
 
-    protected abstract function createDto();
-
-    protected abstract function handle(ServerRequestInterface $request, $dto): ResponseInterface;
+    protected abstract function handle(ServerRequestInterface $request, $command): ResponseInterface;
 }
