@@ -2,71 +2,107 @@
 
 namespace App\Strategy;
 
+use App\Command\OpenPositionCommand;
 use App\Entity\Position;
+use App\Utils\PriceNormalizer;
+use App\ValueObject\Direction;
+use App\ValueObject\Level;
+use App\ValueObject\Price;
+use Webmozart\Assert\Assert;
 
 final class DefaultStrategy implements StrategyInterface
 {
-    private $stopLoss;
-    private $partialStopLoss;
-    private $partialTakeProfit;
-    private $takeProfit;
+    private $stop;
+    private $partialStop;
+    private $partialProfit;
+    private $profit;
     private $lots;
     private $digitsOffset;
 
     public function __construct(
-        int $stopLoss,
-        int $partialStopLoss,
-        int $partialTakeProfit,
-        int $takeProfit,
+        int $stop,
+        int $partialStop,
+        int $profit,
+        int $partialProfit,
         float $lots,
         int $digitsOffset = 1
     ) {
-        $this->stopLoss = $stopLoss;
-        $this->partialStopLoss = $partialStopLoss;
-        $this->partialTakeProfit = $partialTakeProfit;
-        $this->takeProfit = $takeProfit;
+        $this->stop = $stop;
+        $this->partialStop = $partialStop;
+        $this->profit = $profit;
+        $this->partialProfit = $partialProfit;
         $this->lots = $lots;
         $this->digitsOffset = $digitsOffset;
     }
 
-    public function apply(Position $position)
+    public static function fromCommand(OpenPositionCommand $command): self
     {
-        if ($position->type === Position::TYPE_BUY) {
-            return $this->computeBuy($position);
-        } elseif ($position->type === Position::TYPE_SELL) {
-            return $this->computeSell($position);
-        }
-
-        throw new \Exception(sprintf('Unknown position type "%s"', $position->type));
+        return new self(
+            $command->getStop(),
+            $command->getPartialStop(),
+            $command->getProfit(),
+            $command->getPartialProfit(),
+            $command->getLots()
+        );
     }
 
-    private function computeBuy(Position $position)
+    public function computeStopLevel(OpenPositionCommand $command): Level
     {
-        $position->stop = $position->openPrice - $this->normalizePips($position->digits, $this->stopLoss);
-        $position->partialStop = $position->openPrice - $this->normalizePips($position->digits, $this->partialStopLoss);
-        $position->profit = $position->openPrice + $this->normalizePips($position->digits, $this->takeProfit);
-        $position->partialProfit = $position->openPrice + $this->normalizePips($position->digits, $this->partialTakeProfit);
-        $position->lots = $this->lots;
-        $position->openLots = $this->lots;
+        Position::assertPositionType($command->getType());
 
-        return $position;
+        $normalizedPips = PriceNormalizer::getPriceWithPips(
+            $command->getDigits(),
+            $command->getStop(),
+            $command->getOpenPrice()
+        );
+
+        return $command->getType() === Position::TYPE_BUY
+            ? new Level(new Price($command->getOpenPrice() - $normalizedPips), Direction::LESS())
+            : new Level(new Price($command->getOpenPrice() + $normalizedPips), Direction::GREATER());
     }
 
-    private function computeSell(Position $position)
+    public function computePartialStopLevel(OpenPositionCommand $command): Level
     {
-        $position->stop = $position->openPrice + $this->normalizePips($position->digits, $this->stopLoss);
-        $position->partialStop = $position->openPrice + $this->normalizePips($position->digits, $this->partialStopLoss);
-        $position->profit = $position->openPrice - $this->normalizePips($position->digits, $this->takeProfit);
-        $position->partialProfit = $position->openPrice - $this->normalizePips($position->digits, $this->partialTakeProfit);
-        $position->lots = $this->lots;
-        $position->openLots = $this->lots;
+        Position::assertPositionType($command->getType());
 
-        return $position;
+        $normalizedPips = PriceNormalizer::getPriceWithPips(
+            $command->getDigits(),
+            $command->getPartialStop(),
+            $command->getOpenPrice()
+        );
+
+        return $command->getType() === Position::TYPE_BUY
+            ? new Level(new Price($command->getOpenPrice() - $normalizedPips), Direction::LESS())
+            : new Level(new Price($command->getOpenPrice() + $normalizedPips), Direction::GREATER());
     }
 
-    private function normalizePips(int $digits, int $pips)
+    public function computeProfitLevel(OpenPositionCommand $command): Level
     {
-        $normalizedPips = $pips/pow(10, $digits-$this->digitsOffset);
-        return (float)number_format($normalizedPips, $pips);
+        Position::assertPositionType($command->getType());
+
+        $normalizedPips = PriceNormalizer::getPriceWithPips(
+            $command->getDigits(),
+            $command->getProfit(),
+            $command->getOpenPrice()
+        );
+
+        return $command->getType() === Position::TYPE_BUY
+            ? new Level(new Price($command->getOpenPrice() + $normalizedPips), Direction::GREATER())
+            : new Level(new Price($command->getOpenPrice() - $normalizedPips), Direction::LESS());
+    }
+
+    public function computePartialProfitLevel(OpenPositionCommand $command): Level
+    {
+        Position::assertPositionType($command->getType());
+
+        $normalizedPips = PriceNormalizer::getPriceWithPips(
+            $command->getDigits(),
+            $command->getPartialProfit(),
+            $command->getOpenPrice()
+        );
+
+        return $command->getType() === Position::TYPE_BUY
+            ? new Level(new Price($command->getOpenPrice() + $normalizedPips), Direction::GREATER())
+            : new Level(new Price($command->getOpenPrice() - $normalizedPips), Direction::LESS());
     }
 }

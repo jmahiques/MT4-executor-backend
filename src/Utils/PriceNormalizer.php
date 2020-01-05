@@ -4,9 +4,8 @@ namespace App\Utils;
 
 class PriceNormalizer
 {
-    public static function getPriceWithPips(int $digits, int $pips, int $digitsOffset = 1)
+    public static function getPriceWithPips(int $digits, int $pips, int $digitsOffset = 1): float
     {
-        $normalizedPips = $pips/pow(10, $digits-$digitsOffset);
-        return (float)number_format($normalizedPips, $pips);
+        return $pips/pow(10, $digits-$digitsOffset);
     }
 }
