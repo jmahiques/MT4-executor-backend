@@ -53,4 +53,9 @@ final class Level
     {
         return $this->reachedAt;
     }
+
+    public function direction(): string
+    {
+        return $this->direction->get();
+    }
 }

@@ -286,4 +286,37 @@ class PositionTest extends TestCase
         );
         self::assertInstanceOf(Position::class, $position);
     }
+
+    public function testUpdateLevels()
+    {
+        $position = Position::BUY(
+            1,
+            123,
+            new \DateTime('now'),
+            1.1240,
+            0.02,
+            4,
+            'EURUSD',
+            new Level(new Price(1.1230), Direction::LESS()),
+            new Level(new Price(1.1235), Direction::LESS()),
+            new Level(new Price(1.1280), Direction::GREATER()),
+            new Level(new Price(1.1260), Direction::GREATER())
+        );
+
+        $position->updateStopLevel(1.1235);
+        self::assertEquals(1.1235, $position->stopLevel()->atPrice());
+        self::assertEquals(Direction::LESS, $position->stopLevel()->direction());
+
+        $position->updatePartialStopLevel(1.1236);
+        self::assertEquals(1.1236, $position->partialStopLevel()->atPrice());
+        self::assertEquals(Direction::LESS, $position->partialStopLevel()->direction());
+
+        $position->updateProfitLevel(1.1270);
+        self::assertEquals(1.1270, $position->profitLevel()->atPrice());
+        self::assertEquals(Direction::GREATER, $position->profitLevel()->direction());
+
+        $position->updatePartialProfitLevel(1.1265);
+        self::assertEquals(1.1265, $position->partialProfitLevel()->atPrice());
+        self::assertEquals(Direction::GREATER, $position->partialProfitLevel()->direction());
+    }
 }

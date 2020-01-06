@@ -273,6 +273,26 @@ final class Position
         return $this->ticket;
     }
 
+    public function updateStopLevel(float $price)
+    {
+        $this->stop = new Level(new Price($price), new Direction($this->stop->direction()));
+    }
+
+    public function updatePartialStopLevel(float $price)
+    {
+        $this->partialStop = new Level(new Price($price), new Direction($this->partialStop->direction()));
+    }
+
+    public function updateProfitLevel(float $price)
+    {
+        $this->profit = new Level(new Price($price), new Direction($this->profit->direction()));
+    }
+
+    public function updatePartialProfitLevel(float $price)
+    {
+        $this->partialProfit = new Level(new Price($price), new Direction($this->partialProfit->direction()));
+    }
+
     public static function getPositionTypes()
     {
         return array_filter((new \ReflectionClass(__CLASS__))->getConstants(), function ($value, $key) {
