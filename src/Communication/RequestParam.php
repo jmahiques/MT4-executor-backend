@@ -14,11 +14,18 @@ final class RequestParam
     public const ORDER_TYPE = 'OT';
     public const OPEN_TIME = 'OOT';
     public const LOTS = 'L';
+
     //Not price levels, pip configuration
     public const STOP = 'S';
     public const PARTIAL_STOP = 'PS';
     public const PROFIT = 'P';
     public const PARTIAL_PROFIT = 'PP';
+
+    //Metatrader levels dragged by user
+    public const LEVEL_STOP = 'LS';
+    public const LEVEL_PARTIAL_STOP = 'LPS';
+    public const LEVEL_PROFIT = 'LP';
+    public const LEVEL_PARTIAL_PROFIT = 'LPP';
 
     public static function getNameForConstant(string $constant)
     {

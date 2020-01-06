@@ -7,6 +7,7 @@ use App\EndPoint\NoEndPoint;
 use App\EndPoint\OpenPositionEndPoint;
 use App\EndPoint\ProbeEndPoint;
 use App\EndPoint\TickEndPoint;
+use App\EndPoint\UserUpdateLevelEndPoint;
 
 class Router
 {
@@ -25,6 +26,8 @@ class Router
             return new ProbeEndPoint();
         } elseif ($url === $this->root.'/tick') {
             return new TickEndPoint();
+        } elseif ($url === $this->root.'/levels') {
+            return new UserUpdateLevelEndPoint();
         }
 
         return new NoEndPoint();
