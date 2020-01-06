@@ -2,6 +2,8 @@
 
 namespace App\ValueObject;
 
+use Webmozart\Assert\Assert;
+
 final class Direction
 {
     public const GREATER = 'greater';
@@ -9,8 +11,18 @@ final class Direction
 
     private $value;
 
-    private function __construct(string $value)
+    public function __construct(string $value)
     {
+        $this->setValue($value);
+    }
+
+    private function setValue(string $value)
+    {
+        $validValues = (new \ReflectionClass(__CLASS__))->getConstants();
+        Assert::true(
+            in_array($value, $validValues),
+            sprintf('The direction must be in [%s]', implode(',', $validValues))
+        );
         $this->value = $value;
     }
 
