@@ -2,8 +2,8 @@
 
 namespace App\EndPoint;
 
+use App\Communication\CommunicationResponse;
 use League\Pipeline\StageInterface;
-use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -17,6 +17,6 @@ final class ProbeEndPoint extends EndPoint
 
     protected function handle(ServerRequestInterface $request, $command): ResponseInterface
     {
-        return new Response(200);
+        return CommunicationResponse::OK();
     }
 }

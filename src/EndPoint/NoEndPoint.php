@@ -2,10 +2,10 @@
 
 namespace App\EndPoint;
 
+use App\Communication\CommunicationResponse;
 use League\Pipeline\StageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Nyholm\Psr7\Response;
 
 class NoEndPoint extends EndPoint
 {
@@ -17,6 +17,6 @@ class NoEndPoint extends EndPoint
 
     protected function handle(ServerRequestInterface $request, $command): ResponseInterface
     {
-        return new Response(404);
+        return CommunicationResponse::NOT_FOUND();
     }
 }

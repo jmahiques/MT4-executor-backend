@@ -4,6 +4,7 @@ namespace App\EndPoint;
 
 use App\Communication\RequestParam;
 use App\Command\OpenPositionCommand;
+use App\Communication\CommunicationResponse;
 use App\Entity\Position;
 use App\PipelineStage\CreateOpenPositionCommandStage;
 use App\PipelineStage\ValidateAndParseDatetimeStage;
@@ -12,7 +13,6 @@ use App\PipelineStage\ValidateAndParseIntegerStage;
 use App\PipelineStage\ValidateAndParseStringStage;
 use App\Strategy\DefaultStrategy;
 use League\Pipeline\StageInterface;
-use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,10 +57,10 @@ final class OpenPositionEndPoint extends EndPoint
             /** @todo LOG entity creation */
             $this->repository->save($position);
 
-            return new Response(200, ['Content-Type' => 'text/plain'], $position->notifyLevels());
+            return CommunicationResponse::OK($position->notifyLevels());
         } catch (\Exception $e) {
             /** @todo log error */
-            return new Response(406, ['Content-Type' => 'text/plain'], $e->getMessage());
+            return CommunicationResponse::INVALID_REQUEST($e->getMessage());
         }
     }
 }
