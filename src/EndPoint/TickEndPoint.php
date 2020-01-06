@@ -34,40 +34,35 @@ class TickEndPoint extends EndPoint
      */
     protected function handle(ServerRequestInterface $request, $command): ResponseInterface
     {
-        try {
-            $position = $this->repository->get($command->getMagicNumber(), $command->getTicket());
+        $position = $this->repository->get($command->getMagicNumber(), $command->getTicket());
 
-            if (!$position instanceof Position) {
-                return CommunicationResponse::NOT_FOUND();
-            }
-
-            $response = CommunicationResponse::OK();
-
-            $stop = $position->stopLevel();
-            if (!$stop->hasReachedPrice() && $stop->reached($command->getBid())) {
-                $response = CommunicationResponse::STOP_REACHED();
-            }
-
-            $profit = $position->profitLevel();
-            if (!$profit->hasReachedPrice() && $profit->reached($command->getBid())) {
-                $response = CommunicationResponse::PROFIT_REACHED();
-            }
-
-            $partialStop = $position->partialStopLevel();
-            if (!$partialStop->hasReachedPrice() && $partialStop->reached($command->getBid())) {
-                $response = CommunicationResponse::PARTIAL_STOP_REACHED();
-            }
-
-            $partialProfit = $position->partialProfitLevel();
-            if (!$partialProfit->hasReachedPrice() && $partialProfit->reached($command->getBid())) {
-                $response = CommunicationResponse::PARTIAL_PROFIT_REACHED();
-            }
-
-            $this->repository->save($position);
-            return $response;
-        } catch (\Exception $e) {
-            /** @todo log error */
-            return CommunicationResponse::INVALID_REQUEST($e->getMessage());
+        if (!$position instanceof Position) {
+            return CommunicationResponse::NOT_FOUND();
         }
+
+        $response = CommunicationResponse::OK();
+
+        $stop = $position->stopLevel();
+        if (!$stop->hasReachedPrice() && $stop->reached($command->getBid())) {
+            $response = CommunicationResponse::STOP_REACHED();
+        }
+
+        $profit = $position->profitLevel();
+        if (!$profit->hasReachedPrice() && $profit->reached($command->getBid())) {
+            $response = CommunicationResponse::PROFIT_REACHED();
+        }
+
+        $partialStop = $position->partialStopLevel();
+        if (!$partialStop->hasReachedPrice() && $partialStop->reached($command->getBid())) {
+            $response = CommunicationResponse::PARTIAL_STOP_REACHED();
+        }
+
+        $partialProfit = $position->partialProfitLevel();
+        if (!$partialProfit->hasReachedPrice() && $partialProfit->reached($command->getBid())) {
+            $response = CommunicationResponse::PARTIAL_PROFIT_REACHED();
+        }
+
+        $this->repository->save($position);
+        return $response;
     }
 }

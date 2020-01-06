@@ -45,22 +45,17 @@ final class OpenPositionEndPoint extends EndPoint
      */
     protected function handle(ServerRequestInterface $request, $command): ResponseInterface
     {
-        try {
-            $strategy = DefaultStrategy::fromCommand($command);
-            $position = Position::fromCommand(
-                $command,
-                $strategy->computeStopLevel($command),
-                $strategy->computePartialStopLevel($command),
-                $strategy->computeProfitLevel($command),
-                $strategy->computePartialProfitLevel($command)
-            );
-            /** @todo LOG entity creation */
-            $this->repository->save($position);
+        $strategy = DefaultStrategy::fromCommand($command);
+        $position = Position::fromCommand(
+            $command,
+            $strategy->computeStopLevel($command),
+            $strategy->computePartialStopLevel($command),
+            $strategy->computeProfitLevel($command),
+            $strategy->computePartialProfitLevel($command)
+        );
+        /** @todo LOG entity creation */
+        $this->repository->save($position);
 
-            return CommunicationResponse::OK($position->notifyLevels());
-        } catch (\Exception $e) {
-            /** @todo log error */
-            return CommunicationResponse::INVALID_REQUEST($e->getMessage());
-        }
+        return CommunicationResponse::OK($position->notifyLevels());
     }
 }

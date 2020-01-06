@@ -2,6 +2,7 @@
 
 namespace App\EndPoint;
 
+use App\Communication\CommunicationResponse;
 use App\Persistence\PositionRepository;
 use League\Pipeline\Pipeline;
 use League\Pipeline\PipelineBuilder;
@@ -25,7 +26,12 @@ abstract class EndPoint
         $pipeline = $this->createPipeLine();
         $result = $pipeline->process($request->getParsedBody());
 
-        return $this->handle($request, $result);
+        try {
+            return $this->handle($request, $result);
+        } catch (\Exception $e) {
+            /** @todo Log error */
+            return CommunicationResponse::INVALID_REQUEST($e->getMessage());
+        }
     }
 
     /** @return Pipeline */
