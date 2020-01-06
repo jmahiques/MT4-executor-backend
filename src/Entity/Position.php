@@ -16,12 +16,6 @@ final class Position
     const TYPE_BUY = 'buy';
     const TYPE_SELL = 'sell';
 
-    const STATE_OPEN = 'open';
-    const STATE_CLOSED_HALF = 'open';
-    const STATE_HALF_BREAKEVEN = 'half.breakeven';
-    const STATE_BREAKEVEN = 'breakeven';
-    const STATE_CLOSED = 'closed';
-
     /** @var \DateTime */
     private $openTime;
     /** @var float */
@@ -50,8 +44,6 @@ final class Position
     private $closedTime;
     /** @var \DateTime */
     private $closedHalfTime;
-    /** @var string */
-    private $currentState;
     /** @var int */
     private $magicNumber;
 
@@ -71,7 +63,6 @@ final class Position
     ) {
         $this->setType($type);
         $this->setOpenTime($openTime);
-        $this->currentState = self::STATE_OPEN;
         $this->setOpenPrice($openPrice);
         $this->setLots($lots);
         $this->openLots = $lots;
@@ -252,24 +243,24 @@ final class Position
         }
     }
 
-    public function reachedPartialStop(float $price)
+    public function stopLevel(): Level
     {
-        return $this->partialStop->hasReachedPrice() ?: $this->partialStop->reached($price);
+        return $this->stop;
     }
 
-    public function reachedStop(float $price)
+    public function partialStopLevel(): Level
     {
-        return $this->stop->hasReachedPrice() ?: $this->stop->reached($price);
+        return $this->partialStop;
     }
 
-    public function reachedPartialProfit(float $price)
+    public function profitLevel(): Level
     {
-        return $this->partialProfit->hasReachedPrice() ?: $this->partialProfit->reached($price);
+        return $this->profit;
     }
 
-    public function reachedProfit(float $price)
+    public function partialProfitLevel(): Level
     {
-        return $this->profit->hasReachedPrice() ?: $this->profit->reached($price);
+        return $this->partialProfit;
     }
 
     public function magicNumber()
