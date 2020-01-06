@@ -28,10 +28,10 @@ final class Level
     {
         Assert::notEq($this->reached, true, 'The price was reached the level previously');
 
-        if ($this->direction->get() === Direction::LESS && $this->price->get() <= $price) {
+        if ($this->direction->get() === Direction::LESS && $this->price->get() >= $price) {
             $this->priceReachedLevelPrice();
             return true;
-        } elseif ($this->direction->get() === Direction::GREATER && $price >= $this->price->get()) {
+        } elseif ($this->direction->get() === Direction::GREATER && $this->price->get() <= $price) {
             $this->priceReachedLevelPrice();
             return true;
         }
