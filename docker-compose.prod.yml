@@ -1,0 +1,12 @@
+version: '3'
+services:
+    reactphp:
+        build: ./docker/reactphp
+        volumes:
+          - .:/var/www/html
+        ports:
+          - 80:8080
+        links:
+          - redis
+        depends_on:
+          - redis

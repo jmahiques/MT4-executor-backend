@@ -1,25 +1,5 @@
 version: '3'
 services:
-  php-apache:
-    build: ./docker/php-apache
-    volumes:
-      - .:/var/www/html
-    ports:
-      - 80:80
-    depends_on:
-      - redis
-    links:
-      - redis
-#  reactphp:
-#    build: ./docker/reactphp
-#    volumes:
-#      - .:/var/www/html
-#    ports:
-#      - 8080:8080
-#    links:
-#      - redis
-#    depends_on:
-#      - redis
   redis:
     image: redis
     ports:
