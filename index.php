@@ -1,5 +1,6 @@
 <?php
 
+use App\Communication\CommunicationResponse;
 use App\Router\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -16,8 +17,13 @@ $creator = new ServerRequestCreator(
 );
 $serverRequest = $creator->fromGlobals();
 
-$response = (new Router('/index.php'))
-    ->match($serverRequest->getUri()->getPath())
-    ->execute($serverRequest);
+try {
+    $response = (new Router('/index.php'))
+        ->match($serverRequest->getUri()->getPath())
+        ->execute($serverRequest);
+} catch(\Exception $e) {
+    //@todo log it
+    $response = CommunicationResponse::INVALID_REQUEST($e->getMessage());
+}
 
 (new SapiEmitter())->emit($response);

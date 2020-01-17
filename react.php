@@ -1,5 +1,6 @@
 <?php
 
+use App\Communication\CommunicationResponse;
 use App\Router\Router;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
@@ -9,9 +10,13 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 $loop = Factory::create();
 $server = new ReactPHPServer(function (ServerRequestInterface $serverRequest) {
-    return (new Router('/react.php'))
-        ->match($serverRequest->getUri()->getPath())
-        ->execute($serverRequest);
+    try {
+        return (new Router('/react.php'))
+            ->match($serverRequest->getUri()->getPath())
+            ->execute($serverRequest);
+    } catch (\Exception $e) {
+        return CommunicationResponse::INVALID_REQUEST($e->getMessage());
+    }
 });
 
 $server->on('error', function (\Throwable $e) {
