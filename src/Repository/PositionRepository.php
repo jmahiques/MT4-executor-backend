@@ -1,34 +1,32 @@
 <?php
 
-namespace App\Persistence;
+namespace App\Storage;
 
 use App\Entity\Position;
 
 class PositionRepository
 {
-    private $redis;
+    /** @var StorageInterface */
+    private $storage;
 
-    public function __construct()
+    public function __construct(StorageInterface $storage)
     {
-        $this->redis = RedisConnection::getConnection();
+        $this->storage = $storage;
     }
 
     public function save(Position $position)
     {
-        $this->redis->set(
+        $this->storage->set(
             $this->generateKey($position->magicNumber(), $position->ticket()),
-            serialize($position)
+            $position
         );
     }
 
     public function get(int $magicNumber, int $ticket): ?Position
     {
-        $position = $this->redis->get($this->generateKey($magicNumber, $ticket));
-        if ($position !== null) {
-            return unserialize($position);
-        }
-
-        return null;
+        return $this->storage->get(
+            $this->generateKey($magicNumber, $ticket)
+        );
     }
 
     private function generateKey(int $magicNumber, int $ticket)
