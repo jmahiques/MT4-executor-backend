@@ -11,4 +11,4 @@ RUN mkdir -p /var/www/html
 
 RUN usermod -u 1000 www-data
 
-ENTRYPOINT ["./docker/reactphp/entrypoint.sh"]
+CMD ["php", "react.php"]
