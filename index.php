@@ -1,6 +1,7 @@
 <?php
 
 use App\Communication\CommunicationResponse;
+use App\Storage\RedisStorage;
 use App\Router\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -20,6 +21,7 @@ $serverRequest = $creator->fromGlobals();
 try {
     $response = (new Router('/index.php'))
         ->match($serverRequest->getUri()->getPath())
+        ->configureRepository(new RedisStorage())
         ->execute($serverRequest);
 } catch(\Exception $e) {
     //@todo log it

@@ -2,17 +2,25 @@
 
 use App\Communication\CommunicationResponse;
 use App\Router\Router;
+use App\Storage\InMemoryStorage;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
 use React\Http\Server as ReactPHPServer;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+$storage = new InMemoryStorage();
 $loop = Factory::create();
-$server = new ReactPHPServer(function (ServerRequestInterface $serverRequest) {
+$loop->addSignal(SIGTERM, function (int $signal) use ($storage) {
+    $storage->flush();
+    printf('REACHED SIGTERM AT: %s', (new \DateTime('now'))->format('U'));
+});
+
+$server = new ReactPHPServer(function (ServerRequestInterface $serverRequest) use($storage) {
     try {
         return (new Router('/react.php'))
             ->match($serverRequest->getUri()->getPath())
+            ->configureRepository($storage)
             ->execute($serverRequest);
     } catch (\Exception $e) {
         return CommunicationResponse::INVALID_REQUEST($e->getMessage());
@@ -20,13 +28,11 @@ $server = new ReactPHPServer(function (ServerRequestInterface $serverRequest) {
 });
 
 $server->on('error', function (\Throwable $e) {
-    echo 'Error: ' . $e->getMessage() . ' --' . $e->getTraceAsString() . PHP_EOL;
-    echo 'File: '.$e->getFile().' Line: '.$e->getLine().' Code: '.$e->getCode() . PHP_EOL;
+    printf('Error: %s -- %s', $e->getMessage(), $e->getTraceAsString());
+    printf('File: %s Line: %s Code: %s', $e->getFile(), $e->getLine(), $e->getCode());
 });
 
 $socket = new \React\Socket\Server('0.0.0.0:8080', $loop);
 $server->listen($socket);
-
-echo 'Listening on ' . str_replace('tcp:', 'http:', $socket->getAddress()) . PHP_EOL;
 
 $loop->run();

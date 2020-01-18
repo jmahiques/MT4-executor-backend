@@ -3,7 +3,8 @@
 namespace App\EndPoint;
 
 use App\Communication\CommunicationResponse;
-use App\Persistence\PositionRepository;
+use App\Storage\PositionRepository;
+use App\Storage\StorageInterface;
 use League\Pipeline\Pipeline;
 use League\Pipeline\PipelineBuilder;
 use League\Pipeline\PipelineInterface;
@@ -16,13 +17,18 @@ abstract class EndPoint
     protected $dto;
     protected $repository;
 
-    public function __construct()
+    public function configureRepository(StorageInterface $storage)
     {
-        $this->repository = new PositionRepository();
+        $this->repository = new PositionRepository($storage);
+        return $this;
     }
 
     public function execute(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->repository instanceof PositionRepository) {
+            throw new \Exception('No repository configured to persist the entity.');
+        }
+
         $pipeline = $this->createPipeLine();
         $result = $pipeline->process($request->getParsedBody());
 
