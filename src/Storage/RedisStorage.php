@@ -16,7 +16,7 @@ class RedisStorage implements StorageInterface
         }
     }
 
-    public function get(string $key): ?object
+    public function get(string $key)
     {
         $serializedObject = static::$connection->get($key);
 
@@ -25,7 +25,7 @@ class RedisStorage implements StorageInterface
             : null;
     }
 
-    public function set(string $key, object $object): void
+    public function set(string $key, $object): void
     {
         static::$connection->set($key, serialize($object));
     }

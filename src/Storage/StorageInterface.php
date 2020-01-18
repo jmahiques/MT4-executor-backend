@@ -4,7 +4,7 @@ namespace App\Storage;
 
 interface StorageInterface
 {
-    public function set(string $key, object $object): void;
+    public function set(string $key, $object): void;
 
-    public function get(string $key): ?object;
+    public function get(string $key);
 }
