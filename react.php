@@ -1,7 +1,6 @@
 <?php
 
 use App\Communication\CommunicationResponse;
-use App\Router\Router;
 use App\Storage\InMemoryStorage;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
@@ -18,10 +17,8 @@ $loop->addSignal(SIGTERM, function (int $signal) use ($storage) {
 
 $server = new ReactPHPServer(function (ServerRequestInterface $serverRequest) use($storage) {
     try {
-        return (new Router('/react.php'))
-            ->match($serverRequest->getUri()->getPath())
-            ->configureRepository($storage)
-            ->execute($serverRequest);
+        $app = new App\App('/react.php', $storage);
+        return $app->run($serverRequest);
     } catch (\Exception $e) {
         return CommunicationResponse::INVALID_REQUEST($e->getMessage());
     }

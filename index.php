@@ -2,7 +2,6 @@
 
 use App\Communication\CommunicationResponse;
 use App\Storage\RedisStorage;
-use App\Router\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -19,10 +18,8 @@ $creator = new ServerRequestCreator(
 $serverRequest = $creator->fromGlobals();
 
 try {
-    $response = (new Router('/index.php'))
-        ->match($serverRequest->getUri()->getPath())
-        ->configureRepository(new RedisStorage())
-        ->execute($serverRequest);
+    $app = new App\App('/index.php', new RedisStorage());
+    $response = $app->run($serverRequest);
 } catch(\Exception $e) {
     //@todo log it
     $response = CommunicationResponse::INVALID_REQUEST($e->getMessage());
