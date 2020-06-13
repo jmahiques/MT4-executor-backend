@@ -4,32 +4,27 @@ namespace App\Router;
 
 use App\EndPoint\EndPoint;
 use App\EndPoint\NoEndPoint;
-use App\EndPoint\OpenPositionEndPoint;
-use App\EndPoint\ProbeEndPoint;
-use App\EndPoint\TickEndPoint;
-use App\EndPoint\UserUpdateLevelEndPoint;
 
 class Router
 {
     private $root;
+    /** @var EndPoint[] */
+    private $handlerRoutes;
 
-    public function __construct(string $root)
+    public function __construct(string $root, array $handlerRoutes)
     {
         $this->root = $root;
+        $this->handlerRoutes = $handlerRoutes;
     }
 
-    public function match(string $url): EndPoint
+    public function match(string $url): string
     {
-        if ($url === $this->root.'/open') {
-            return new OpenPositionEndPoint();
-        } elseif ($url === $this->root.'/probe') {
-            return new ProbeEndPoint();
-        } elseif ($url === $this->root.'/tick') {
-            return new TickEndPoint();
-        } elseif ($url === $this->root.'/levels') {
-            return new UserUpdateLevelEndPoint();
+        foreach ($this->handlerRoutes as $handler) {
+            if ($this->root . $handler::getUri() === $url) {
+                return $handler;
+            }
         }
 
-        return new NoEndPoint();
+        return NoEndPoint::class;
     }
 }

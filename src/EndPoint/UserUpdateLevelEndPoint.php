@@ -51,4 +51,9 @@ class UserUpdateLevelEndPoint extends EndPoint
 
         return CommunicationResponse::OK();
     }
+
+    public static function getUri(): string
+    {
+        return '/levels';
+    }
 }

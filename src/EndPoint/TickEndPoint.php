@@ -65,4 +65,9 @@ class TickEndPoint extends EndPoint
         $this->repository->save($position);
         return $response;
     }
+
+    public static function getUri(): string
+    {
+        return '/tick';
+    }
 }

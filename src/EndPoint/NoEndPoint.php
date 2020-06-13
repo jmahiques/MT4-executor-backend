@@ -19,4 +19,9 @@ class NoEndPoint extends EndPoint
     {
         return CommunicationResponse::NOT_FOUND();
     }
+
+    public static function getUri(): string
+    {
+        return '';
+    }
 }

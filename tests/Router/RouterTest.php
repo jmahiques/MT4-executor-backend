@@ -13,20 +13,20 @@ class RouterTest extends TestCase
     /**
      * @dataProvider getUris
      */
-    public function test($uri, $expectedEndPoint)
+    public function test($uri, $routeHandlers, $expectedEndPoint)
     {
-        $router = new Router('');
-        self::assertInstanceOf($expectedEndPoint, $router->match($uri));
+        $router = new Router('', $routeHandlers);
+        self::assertEquals($expectedEndPoint, $router->match($uri));
     }
 
     public function getUris()
     {
         return [
-            ['/open', OpenPositionEndPoint::class],
-            ['/probe', ProbeEndPoint::class],
-            ['/tick', TickEndPoint::class],
-            ['/levels', UserUpdateLevelEndPoint::class],
-            ['/new-endpoint', NoEndPoint::class],
+            ['/open', [OpenPositionEndPoint::class], OpenPositionEndPoint::class],
+            ['/probe', [ProbeEndPoint::class], ProbeEndPoint::class],
+            ['/tick', [TickEndPoint::class], TickEndPoint::class],
+            ['/levels', [UserUpdateLevelEndPoint::class], UserUpdateLevelEndPoint::class],
+            ['/new-endpoint', [], NoEndPoint::class],
         ];
     }
 }

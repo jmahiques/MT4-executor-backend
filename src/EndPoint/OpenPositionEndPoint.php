@@ -58,4 +58,9 @@ final class OpenPositionEndPoint extends EndPoint
 
         return CommunicationResponse::OK($position->notifyLevels());
     }
+
+    public static function getUri(): string
+    {
+        return '/open';
+    }
 }

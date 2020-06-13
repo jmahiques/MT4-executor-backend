@@ -55,4 +55,6 @@ abstract class EndPoint
     protected abstract function getStages(): array;
 
     protected abstract function handle(ServerRequestInterface $request, $command): ResponseInterface;
+    
+    public static abstract function getUri(): string;
 }
