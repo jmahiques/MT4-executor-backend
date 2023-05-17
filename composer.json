@@ -1,7 +1,7 @@
 {
     "require": {
         "php" : "^7.2",
-        "react/http": "^0.8.5",
+        "react/http": "^1.9.0",
         "monolog/monolog": "^2.0",
         "nyholm/psr7": "^1.2",
         "webmozart/assert": "^1.6",
